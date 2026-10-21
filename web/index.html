@@ -3,22 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<title>Tidal Echo</title>
+<title>镜花水月</title>
 
 <!-- PWA / iOS -->
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preload" href="chat-light.webp" as="image" fetchpriority="high">
 <link rel="preload" href="avatar-sea.png" as="image">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link href="https://cdn.jsdelivr.net/npm/@fontsource/cormorant-garamond@5/400.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/@fontsource/cormorant-garamond@5/500.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5/400.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5/500.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/@fontsource/pinyon-script@5/400.min.css" rel="stylesheet">
-<meta name="theme-color" content="#F4F4F5">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/cormorant-garamond@5/400.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/cormorant-garamond@5/500.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5/400.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5/500.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/pinyon-script@5/400.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+<meta name="theme-color" content="#C9D2DE">
 <!-- iOS launch mode is manifest-only; legacy Apple fullscreen meta breaks bottom viewport. -->
 
-<meta name="apple-mobile-web-app-title" content="Tidal Echo">
+<meta name="apple-mobile-web-app-title" content="镜花水月">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
 
@@ -1863,17 +1863,47 @@
 <body>
 
 <!-- ── Login ── -->
-<div class="login" id="login">
-  <div class="orb"></div>
-  <h1>镜花水月</h1>
-  <p class="sub">输入连接密钥，回到你和 Claude 的水面。</p>
-  <form id="loginForm" autocomplete="off">
-    <input id="baseInput" type="text" inputmode="url" placeholder="服务器地址 · https://你的域名/relay" autocomplete="off" spellcheck="false">
-    <input id="secretInput" type="password" inputmode="text" placeholder="连接密钥" autocomplete="off" spellcheck="false">
-    <button type="submit">连接</button>
-    <p class="err" id="loginErr"></p>
-    <p class="hint">有中继就填完整地址（含 <b>/relay</b>）和密钥。<br>没有后端也没关系，下面第二条路直接用模型 API。</p>
-  </form>
+<div class="login landing" id="login">
+  <div class="landing-sky" aria-hidden="true"><span class="lamp"></span></div>
+
+  <div class="landing-inner">
+    <header class="landing-top">
+      <div class="landing-clock" id="landingClock">--<i>:</i>--</div>
+      <div class="landing-date" id="landingDate">—</div>
+    </header>
+
+    <div class="landing-mid">
+      <div class="landing-mark">镜花水月</div>
+      <div class="landing-sub">只属于你和 <b id="landingAi">Cove</b> 的水面</div>
+      <div class="landing-rule"></div>
+      <p class="landing-line" id="landingLine">月亮不会一次圆起来。它每晚只亮一点，也每晚都在。</p>
+    </div>
+
+    <div class="landing-actions">
+      <button type="button" class="land-btn pri" id="lgStart">开始说话</button>
+      <div class="land-row">
+        <button type="button" class="land-btn" id="lgRelay">用中继</button>
+        <button type="button" class="land-btn" id="lgLocal">只看本地</button>
+      </div>
+      <p class="landing-note" id="landingNote">不填服务器也能用：用自己的模型 Key，直接在这台设备上聊。</p>
+    </div>
+
+    <footer class="landing-foot">in endless water, we find each other.</footer>
+  </div>
+
+  <div class="relay-sheet" id="relaySheet" aria-hidden="true">
+    <div class="rs-mask" id="relayMask"></div>
+    <form class="rs-card" id="loginForm" autocomplete="off">
+      <button type="button" class="rs-x" id="relayClose" aria-label="关闭">✕</button>
+      <div class="eyebrow">relay · 私密通道</div>
+      <h2>连到你自己的中继</h2>
+      <p class="rs-hint">地址要带 <b>/relay</b>；密钥就是后端的 <b>RELAY_SECRET</b>。</p>
+      <input id="baseInput" type="text" inputmode="url" placeholder="https://你的域名/relay" autocomplete="off" spellcheck="false">
+      <input id="secretInput" type="password" inputmode="text" placeholder="连接密钥" autocomplete="off" spellcheck="false">
+      <button type="submit" class="land-btn pri">连 接</button>
+      <p class="err" id="loginErr"></p>
+    </form>
+  </div>
 </div>
 
 <!-- ── App ── -->
@@ -5869,6 +5899,7 @@ function showLogin(msg){
   appEl.classList.add("hidden");
   loginEl.classList.remove("hidden");
   $("#loginErr").textContent = msg || "";
+  if (msg && typeof window.moonOpenRelay === "function") { try { window.moonOpenRelay(true); } catch(_) {} }
   const bi = $("#baseInput");
   if (bi && !bi.value) bi.value = API_BASE || "";
   $("#secretInput").value = "";

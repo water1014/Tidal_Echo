@@ -1223,17 +1223,75 @@
     };
   }
 
+  function openRelaySheet(open) {
+    var sh = document.getElementById('relaySheet');
+    if (!sh) return;
+    var on = open !== false;
+    sh.classList.toggle('on', on);
+    sh.setAttribute('aria-hidden', on ? 'false' : 'true');
+    var err = document.getElementById('loginErr');
+    if (on && err) err.textContent = '';
+    if (on) {
+      setTimeout(function () {
+        var b = document.getElementById('baseInput');
+        if (b && !b.value) b.value = savedBase();
+        var sec = document.getElementById('secretInput');
+        if (sec && window.innerWidth > 520) sec.focus();
+      }, 120);
+    }
+  }
+  window.moonOpenRelay = openRelaySheet;
+
+  function quoteOfDay() {
+    var d = new Date();
+    if (!S.quotes || !S.quotes.length) return '';
+    var seed = d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate();
+    return S.quotes[seed % S.quotes.length];
+  }
+
+  function tickLanding() {
+    var d = new Date();
+    var pad2 = function (n) { return (n < 10 ? '0' : '') + n; };
+    var clock = document.getElementById('landingClock');
+    if (clock) clock.innerHTML = pad2(d.getHours()) + '<i>:</i>' + pad2(d.getMinutes());
+    var date = document.getElementById('landingDate');
+    if (date) {
+      var WD = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+      var MO = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+      date.textContent = WD[d.getDay()] + ' · ' + MO[d.getMonth()] + ' ' + d.getDate();
+    }
+    var line = document.getElementById('landingLine');
+    if (line) line.textContent = quoteOfDay();
+    var ai = document.getElementById('landingAi');
+    if (ai) ai.textContent = (S.relation && S.relation.ai) || (typeof AI_NAME !== 'undefined' ? AI_NAME : 'Cove');
+    var note = document.getElementById('landingNote');
+    if (note) {
+      note.textContent = directReady()
+        ? ('已记住 ' + directCfg().model + ' · 点「开始说话」直接聊')
+        : '不填服务器也能用：用自己的模型 Key，直接在这台设备上聊。';
+    }
+  }
+
   function wireLoginAlt() {
+    var start = document.getElementById('lgStart');
+    var relay = document.getElementById('lgRelay');
+    var local = document.getElementById('lgLocal');
+    if (!start) return;
+
+    start.onclick = function () { enterDirect(); };
+    relay.onclick = function () { openRelaySheet(true); };
+    local.onclick = function () { enterLocal(); };
+
+    var close = document.getElementById('relayClose');
+    var mask = document.getElementById('relayMask');
+    if (close) close.onclick = function () { openRelaySheet(false); };
+    if (mask) mask.onclick = function () { openRelaySheet(false); };
+
     var form = document.getElementById('loginForm');
-    if (!form || document.getElementById('lgDirect')) return;
-    var alt = document.createElement('div');
-    alt.className = 'login-alt';
-    alt.innerHTML = '<button type="button" id="lgDirect">没有后端？直接用模型 API</button>' +
-      '<span class="or">或</span><button type="button" id="lgLocal">只看本地</button>';
-    form.parentNode.insertBefore(alt, form.nextSibling);
-    form.addEventListener('submit', function () { setMode('relay'); });
-    document.getElementById('lgDirect').onclick = function () { enterDirect(); };
-    document.getElementById('lgLocal').onclick = function () { enterLocal(); };
+    if (form) form.addEventListener('submit', function () { setMode('relay'); });
+
+    tickLanding();
+    setInterval(tickLanding, 20000);
   }
 
   /* ---------------------------- 启动 ---------------------------- */
