@@ -2349,9 +2349,10 @@ const API_BASE_DEFAULT = (function(){
     if (q) return q.replace(/\/+$/, "");
     const saved = localStorage.getItem("companion_api_base");
     if (saved) return saved.replace(/\/+$/, "");
-    if (/\.github\.io$/i.test(location.hostname) || /\.pages\.dev$/i.test(location.hostname)) return "";
+    // 只有本地开发才默认同源 /relay；静态托管（Pages / 自定义域）一律留空，等人填
+    if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/.test(location.hostname)) return "/relay";
   }catch(_){}
-  return "/relay";
+  return "";
 })();
 let API_BASE = API_BASE_DEFAULT;
 const USE_MOCK  = false;          // true = self-contained demo with fake data (no backend needed)

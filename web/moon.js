@@ -863,7 +863,7 @@
   /* ---------------------------- 服务器设置 ---------------------------- */
   function savedBase() {
     try { var v = localStorage.getItem('companion_api_base'); if (v) return v; } catch (e) {}
-    return /\.github\.io$/i.test(location.hostname) ? '' : '/relay';
+    return /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/.test(location.hostname) ? '/relay' : '';
   }
   function wireServer() {
     var inp = document.getElementById('serverInput');
