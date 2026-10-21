@@ -135,15 +135,17 @@ const CACHE = "companion-v1";   // ← 每次改前端都要 bump（v1 → v2 �
 
 ## 9. 部署到 GitHub Pages（静态前端 + 远程 relay）
 
-GitHub Pages 只托管静态文件，**没有一个同源的 `/relay`**，所以前端必须知道你的后端完整地址。仓库已经带好 `.github/workflows/pages.yml`。
+GitHub Pages 只托管静态文件，**没有一个同源的 `/relay`**，所以前端必须知道你的后端完整地址。
 
-### 9.1 开启 Pages
+### 9.1 开启 Pages（分支发布，最省事）
 
 1. 把仓库推到 GitHub（默认分支 `main`）。
-2. **Settings → Pages → Build and deployment → Source** 选 **GitHub Actions**。
-   （工作流里带了 `enablement: true`，多数情况下第一次跑就会自动开启。）
-3. 等 Actions 里的 `Deploy web to GitHub Pages` 变绿，地址是：
-   `https://<你的用户名>.github.io/Tidal_Echo/`
+2. **Settings → Pages → Build and deployment → Source** 选 **Deploy from a branch**。
+3. Branch 选 **`main`**，目录选 **`/web`**，点 Save。
+4. 等一分钟，地址是：`https://<你的用户名>.github.io/Tidal_Echo/`
+
+> `web/` 下已经有 `.nojekyll`，不会被 Jekyll 拦。
+> 如果你更想用 Actions 发布（例如以后要加构建步骤），把仓库根目录的 `.github/workflows/pages.yml` 加回来、Source 选 **GitHub Actions** 即可；注意推送带 workflow 文件的提交需要 token 有 `workflow` 权限。
 
 ### 9.2 让 relay 允许这个来源
 
@@ -176,4 +178,4 @@ curl -i -H 'Origin: https://<你的用户名>.github.io' https://你的域名/re
 - **上传的图片**返回的是 `/relay/uploads/xxx`，前端会自动补上后端域名；如果后端 `RELAY_PUBLIC_PREFIX` 不是 `/relay`，记得同步改。
 - **推送**：iPhone 必须先从 Safari「添加到主屏幕」，再从主屏图标打开才能订阅；后端还要配好 `VAPID_*`。
 - **改了前端记得 bump** `sw.js` 里的 `CACHE`（现在是 `moonwater-v1`），否则装到主屏的旧壳会赖着不走。
-- **不想用 Actions**：也可以把 `web/` 目录直接设为 Pages 的发布源（Branch → `/web`），效果一样。
+- **地址不要带 `/web`**：发布源选了 `/web` 后，站点根就是 `web/` 里的内容。
