@@ -146,8 +146,10 @@
     ctx.clearRect(0, 0, size, size);
     var cx = size / 2, cy = size / 2, r = size / 2 - 2;
 
+    var darkUI = document.documentElement.getAttribute('data-theme') === 'harbor';
     var g = ctx.createRadialGradient(cx - r * .34, cy - r * .38, r * .1, cx, cy, r);
-    g.addColorStop(0, '#FFFDF6'); g.addColorStop(.5, '#F4E9C8'); g.addColorStop(1, '#DCC38A');
+    if (darkUI) { g.addColorStop(0, '#FFFFFF'); g.addColorStop(.55, '#E9E9E3'); g.addColorStop(1, '#BFBFB7'); }
+    else { g.addColorStop(0, '#FFFFFF'); g.addColorStop(.55, '#EDEDE8'); g.addColorStop(1, '#CFCFC7'); }
 
     var waxing = phase < 0.5;
     var rx = Math.max(0.001, r * Math.abs(1 - 2 * illum));
@@ -155,7 +157,7 @@
     // 先铺一层暗面，让被吃掉的那部分也看得见轮廓
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(126,140,164,.20)';
+    ctx.fillStyle = darkUI ? 'rgba(255,255,255,.08)' : 'rgba(17,17,17,.09)';
     ctx.fill();
 
     ctx.beginPath();
@@ -168,8 +170,8 @@
     }
     ctx.closePath();
     ctx.save();
-    ctx.shadowColor = 'rgba(206,182,126,.55)';
-    ctx.shadowBlur = r * .42;
+    ctx.shadowColor = darkUI ? 'rgba(0,0,0,.45)' : 'rgba(0,0,0,.10)';
+    ctx.shadowBlur = r * .16;
     ctx.fillStyle = g;
     ctx.fill();
     ctx.restore();
@@ -177,12 +179,7 @@
     // 一点环形山的暗斑，别太干净
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
-    ctx.globalAlpha = .07;
-    [[-.3, -.22, .16], [.2, -.36, .09], [.36, .12, .13], [-.14, .3, .1], [.05, .04, .2]].forEach(function (c) {
-      ctx.beginPath();
-      ctx.arc(cx + c[0] * r, cy + c[1] * r, c[2] * r, 0, Math.PI * 2);
-      ctx.fillStyle = '#7A6032'; ctx.fill();
-    });
+
     ctx.restore();
   }
 
@@ -259,15 +256,15 @@
 
   /* ---------------------------- 页面骨架 ---------------------------- */
   var TITLES = {
-    moon: ['月', 'MOON · 今晚的月相'],
-    album: ['影', 'ALBUM · 留下来的一张一张'],
-    diary: ['记', 'DIARY · 一天压成一段'],
-    wish: ['愿', 'WISHES · 做掉了划掉'],
-    focus: ['钟', 'FOCUS · 二十五分钟一段'],
-    tide: ['潮', 'TIDE · 记开始的日子'],
-    breath: ['息', 'BREATH · 只剩一个圆'],
-    pills: ['药', 'PILLS · 一次性的提示'],
-    archive: ['存', 'ARCHIVE · 都在这里']
+    moon: ['月', '月相'],
+    album: ['影', '相册'],
+    diary: ['记', '日记'],
+    wish: ['愿', '愿望'],
+    focus: ['钟', '专注'],
+    tide: ['潮', '周期'],
+    breath: ['息', '呼吸'],
+    pills: ['药', '提示词'],
+    archive: ['存', '存档']
   };
 
   var RENDER = {
@@ -325,7 +322,7 @@
     var m = moonInfo(new Date());
     body.innerHTML =
       '<div class="gcard">' +
-        '<div class="hd"><span class="lbl">tonight</span><span class="lbl">' + cnDate(dayKey()) + '</span></div>' +
+        '<div class="hd"><span class="lbl">今晚</span><span class="lbl">' + cnDate(dayKey()) + '</span></div>' +
         '<div class="moon-stage">' +
           '<canvas class="moon-disc" id="moonDisc" style="width:clamp(130px,34vw,180px);height:auto"></canvas>' +
           '<div class="moon-info">' +
@@ -337,15 +334,16 @@
         '<p class="moon-word" id="moonWord"></p>' +
       '</div>' +
       '<div class="gcard">' +
-        '<div class="hd"><span class="lbl">这一句</span></div>' +
-        '<p class="mhint" style="margin-top:8px">写一句今晚想留在月亮上的话，下次打开还会在。</p>' +
-        '<textarea class="mta" id="moonNote" style="margin-top:10px" placeholder="比如：今天有点难，但我还在。"></textarea>' +
-        '<div class="mrow" style="margin-top:10px"><button class="mbtn pri" id="moonSave">留在这儿</button></div>' +
+        '<div class="hd"><span class="lbl">备注</span></div>' +
+        '<p class="mhint" style="margin-top:8px">只存在这台设备上。</p>' +
+        '<textarea class="mta" id="moonNote" style="margin-top:10px" placeholder="写点什么"></textarea>' +
+        '<div class="mrow" style="margin-top:10px"><button class="mbtn pri" id="moonSave">保存</button></div>' +
       '</div>';
     paintMoon($('#moonDisc', body), m.phase, m.illum);
     var word = $('#moonWord', body);
     var stored = (S.raw && S.raw.moonWord) || '';
     word.textContent = stored || defaultMoonWord(m);
+    word.style.display = word.textContent ? '' : 'none';
     var note = $('#moonNote', body);
     note.value = (S.raw && S.raw.moonNote) || '';
     $('#moonSave', body).onclick = function () {
@@ -355,19 +353,14 @@
       save(); word.textContent = S.raw.moonWord; toast('留在月亮上了');
     };
   }
-  function defaultMoonWord(m) {
-    if (m.illum > .93) return '今晚是满月。不必许愿，只看它一眼就好。';
-    if (m.illum > .6) return '今晚是' + m.name + '。缺的那一角我不替你补 —— 留着，等你自己长圆。';
-    if (m.illum > .4) return '今晚是' + m.name + '。一半亮着，一半替我看着你。';
-    return '今晚是' + m.name + '。光很少，但够照见门口。';
-  }
+  function defaultMoonWord(m) { return ''; }
 
   /* ---------------------------- 影 ---------------------------- */
   function renderAlbum() {
     body.innerHTML =
       '<div class="gcard">' +
-        '<div class="hd"><span class="lbl">影 · 卡册</span><span class="lbl" id="phCount"></span></div>' +
-        '<p class="mhint" style="margin:8px 0 12px">照片只存在这台设备的 IndexedDB 里，不上传，也不进聊天。</p>' +
+        '<div class="hd"><span class="lbl">相册</span><span class="lbl" id="phCount"></span></div>' +
+        '<p class="mhint" style="margin:8px 0 12px">照片只留在这台设备上，不上传。</p>' +
         '<div class="ph-grid" id="phGrid"></div>' +
       '</div>';
     DB.all().then(function (list) {
@@ -474,7 +467,7 @@
     var list = $('#wishList', body);
     var open = S.wishes.filter(function (w) { return !w.done; }).length;
     $('#wishCount', body).textContent = open + ' 件还没做';
-    if (!S.wishes.length) list.innerHTML = '<div class="mempty">还没有愿望。<br>写一件小的，能做完的那种。</div>';
+    if (!S.wishes.length) list.innerHTML = '<div class="mempty">还没有愿望。</div>';
     S.wishes.forEach(function (w) {
       var e = document.createElement('div');
       e.className = 'mitem' + (w.done ? ' done' : '');
@@ -704,7 +697,7 @@
     body.innerHTML =
       '<div class="gcard">' +
         '<div class="hd"><span class="lbl">pills · 只贴一轮</span></div>' +
-        '<p class="mhint" style="margin:10px 0 14px">挑一颗，下一句会带着它一起送到 AI 那边；它不写进历史，说完就散。</p>' +
+        '<p class="mhint" style="margin:10px 0 14px">选中后，下一条消息会带上这条提示，不写入历史。</p>' +
         '<div class="mlist" id="pillList"></div>' +
       '</div>' +
       '<div class="gcard">' +
@@ -837,18 +830,27 @@
   function refreshHero() {
     var d = new Date();
     var clock = document.getElementById('moonClock');
-    if (clock) clock.innerHTML = pad(d.getHours()) + '<i class="cln">:</i>' + pad(d.getMinutes());
+    if (clock) clock.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
     var dateEl = document.getElementById('moonDate');
     if (dateEl) {
-      var WD = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-      dateEl.textContent = (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日 · ' + WD[d.getDay()];
+      var WD = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+      var MO = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+      dateEl.textContent = WD[d.getDay()] + ' · ' + MO[d.getMonth()] + ' ' + d.getDate();
     }
+    var m = moonInfo(d);
     var line = document.getElementById('moonLine');
     if (line) {
-      var q = S.quotes && S.quotes.length ? S.quotes[(d.getFullYear() * 372 + d.getMonth() * 31 + d.getDate()) % S.quotes.length] : '';
-      line.textContent = q;
+      var c = connState();
+      line.textContent = m.name + ' ' + Math.round(m.illum * 100) + '% · ' + (c.on ? c.label : '未连接');
     }
-    var since = S.relation.since || (window.CONFIG && CONFIG.SINCE) || '';
+    var chip = document.getElementById('menuConn');
+    var chipText = document.getElementById('menuConnText');
+    if (chip && chipText) {
+      var st = connState();
+      chip.classList.toggle('on', !!st.on);
+      chipText.textContent = st.label;
+    }
+    var since = S.relation.since || '';
     var wrap = document.querySelector('.menu-days');
     if (since) {
       var n = daysBetween(since);
@@ -890,6 +892,10 @@
       fetch(v + '/healthz', { headers: { Authorization: 'Bearer ' + (localStorage.getItem('companion_secret') || '') } })
         .then(function (r) { return r.json().then(function (j) { say(r.ok ? '通了 · ' + JSON.stringify(j) : '回了 ' + r.status); }); })
         .catch(function (e) { say('没通：' + (e.message || '检查 HTTPS / CORS')); });
+    };
+    var mconn = document.getElementById('menuConn');
+    if (mconn) mconn.onclick = function () {
+      try { if (typeof openProfile === 'function') openProfile(); } catch (e) {}
     };
     document.getElementById('serverLogout').onclick = function () {
       localStorage.removeItem('companion_secret');
@@ -1249,26 +1255,36 @@
     return S.quotes[seed % S.quotes.length];
   }
 
+  function connState() {
+    var m = mode();
+    if (m === 'direct') {
+      return directReady() ? { on: true, label: directCfg().model } : { on: false, label: '未连接' };
+    }
+    if (m === 'local') return { on: false, label: '仅本地' };
+    var sec = null;
+    try { sec = localStorage.getItem('companion_secret'); } catch (e) {}
+    return sec ? { on: true, label: '中继' } : { on: false, label: '未连接' };
+  }
+
   function tickLanding() {
     var d = new Date();
     var pad2 = function (n) { return (n < 10 ? '0' : '') + n; };
     var clock = document.getElementById('landingClock');
-    if (clock) clock.innerHTML = pad2(d.getHours()) + '<i>:</i>' + pad2(d.getMinutes());
+    if (clock) clock.textContent = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
     var date = document.getElementById('landingDate');
     if (date) {
-      var WD = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+      var WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
       var MO = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-      date.textContent = WD[d.getDay()] + ' · ' + MO[d.getMonth()] + ' ' + d.getDate();
+      date.textContent = WD[d.getDay()] + ', ' + MO[d.getMonth()] + ' ' + d.getDate();
     }
-    var line = document.getElementById('landingLine');
-    if (line) line.textContent = quoteOfDay();
     var ai = document.getElementById('landingAi');
     if (ai) ai.textContent = (S.relation && S.relation.ai) || (typeof AI_NAME !== 'undefined' ? AI_NAME : 'Cove');
     var note = document.getElementById('landingNote');
     if (note) {
-      note.textContent = directReady()
-        ? ('已记住 ' + directCfg().model + ' · 点「开始说话」直接聊')
-        : '不填服务器也能用：用自己的模型 Key，直接在这台设备上聊。';
+      var c = connState();
+      note.textContent = c.on
+        ? ('已连接 · ' + c.label)
+        : '还没有连接。可以直接用模型 API，或接入自己的中继。';
     }
   }
 
@@ -1362,13 +1378,13 @@
     // 默认头像换成月；用户自己换过的图不动
     try {
       if (!localStorage.getItem('companion_avatar')) {
-        document.documentElement.style.setProperty('--avatar-default', 'url("avatar-moon.svg")');
+        document.documentElement.style.setProperty('--avatar-default', 'url("avatar.svg")');
       }
       if (typeof window.applyAvatar === 'function' && !window.__moonAvatarHooked) {
         window.__moonAvatarHooked = true;
         var origAvatar = window.applyAvatar;
         window.applyAvatar = function (url) {
-          return origAvatar.call(this, url || 'avatar-moon.svg');
+          return origAvatar.call(this, url || 'avatar.svg');
         };
       }
     } catch (e) {}
@@ -1393,6 +1409,14 @@
       if (bs[0]) bs[0].textContent = '白昼';
       if (bs[1]) bs[1].textContent = '夜色';
     }
+
+    var ms = document.getElementById('menuSettings');
+    if (ms) ms.onclick = function () {
+      try { if (typeof closeMenu === 'function') closeMenu(); } catch (e) {}
+      setTimeout(function () { try { if (typeof openProfile === 'function') openProfile(); } catch (e) {} }, 120);
+    };
+    var bb = document.getElementById('backBtn');
+    if (bb) bb.addEventListener('click', function () { setTimeout(refreshHero, 60); });
 
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && current) { e.stopPropagation(); closePage(); }

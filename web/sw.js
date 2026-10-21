@@ -1,7 +1,7 @@
 /* 镜花水月 — service worker（离线外壳 + Web Push）
    改了前端就 bump CACHE，否则装到主屏的旧壳不会更新。 */
 const AI_NAME = "Cove";            // 推送标题兜底；和 index.html 的 CONFIG.AI_NAME 保持一致
-const CACHE = "moonwater-v1";
+const CACHE = "moonwater-v2";
 const PRECACHE = [
   "./index.html",
   "./moon.css",
@@ -9,7 +9,7 @@ const PRECACHE = [
   "./manifest.webmanifest",
   "./icon-192.png", "./icon-512.png",
   "./apple-touch-icon.png", "./favicon.png",
-  "./avatar-sea.png", "./chat-light.webp", "./chat-harbor.webp",
+  "./avatar.svg", "./chat-light.webp", "./chat-harbor.webp",
 ];
 
 self.addEventListener("install", (e) => {

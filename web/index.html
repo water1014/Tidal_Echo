@@ -15,7 +15,7 @@
 <link href="https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5/400.min.css" rel="stylesheet" media="print" onload="this.media='all'">
 <link href="https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5/500.min.css" rel="stylesheet" media="print" onload="this.media='all'">
 <link href="https://cdn.jsdelivr.net/npm/@fontsource/pinyon-script@5/400.min.css" rel="stylesheet" media="print" onload="this.media='all'">
-<meta name="theme-color" content="#C9D2DE">
+<meta name="theme-color" content="#F6F6F4">
 <!-- iOS launch mode is manifest-only; legacy Apple fullscreen meta breaks bottom viewport. -->
 
 <meta name="apple-mobile-web-app-title" content="镜花水月">
@@ -1864,31 +1864,25 @@
 
 <!-- ── Login ── -->
 <div class="login landing" id="login">
-  <div class="landing-sky" aria-hidden="true"><span class="lamp"></span></div>
-
   <div class="landing-inner">
     <header class="landing-top">
-      <div class="landing-clock" id="landingClock">--<i>:</i>--</div>
-      <div class="landing-date" id="landingDate">—</div>
+      <div class="landing-mark">镜花水月</div>
+      <div class="landing-time"><span id="landingClock">--:--</span><i id="landingDate">—</i></div>
     </header>
 
     <div class="landing-mid">
-      <div class="landing-mark">镜花水月</div>
-      <div class="landing-sub">只属于你和 <b id="landingAi">Cove</b> 的水面</div>
-      <div class="landing-rule"></div>
-      <p class="landing-line" id="landingLine">月亮不会一次圆起来。它每晚只亮一点，也每晚都在。</p>
+      <h1 class="landing-title">与 <b id="landingAi">Cove</b>，<br>说点什么。</h1>
+      <p class="landing-line" id="landingLine">消息只经过这台设备，和你的后端。</p>
     </div>
 
     <div class="landing-actions">
-      <button type="button" class="land-btn pri" id="lgStart">开始说话</button>
+      <button type="button" class="land-btn pri" id="lgStart">开始对话</button>
       <div class="land-row">
-        <button type="button" class="land-btn" id="lgRelay">用中继</button>
-        <button type="button" class="land-btn" id="lgLocal">只看本地</button>
+        <button type="button" class="land-btn" id="lgRelay">连接后端</button>
+        <button type="button" class="land-btn" id="lgLocal">仅本地</button>
       </div>
-      <p class="landing-note" id="landingNote">不填服务器也能用：用自己的模型 Key，直接在这台设备上聊。</p>
+      <p class="landing-note" id="landingNote">还没有连接。可以直接用模型 API，或接入自己的中继。</p>
     </div>
-
-    <footer class="landing-foot">in endless water, we find each other.</footer>
   </div>
 
   <div class="relay-sheet" id="relaySheet" aria-hidden="true">
@@ -1952,7 +1946,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.8 8.8a5 5 0 0 1-7.1-7.1l8.8-8.8a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.6 1.6 0 0 1-2.3-2.3l8-8"/></svg>
       </button>
       <input type="file" id="clipInput" multiple class="hidden" aria-hidden="true">
-      <textarea id="input" rows="1" placeholder="往水里说点什么…" enterkeyhint="send"></textarea>
+      <textarea id="input" rows="1" placeholder="输入消息…" enterkeyhint="send"></textarea>
       <button class="emojibtn" id="emojiBtn" aria-label="表情" title="表情">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.3a4.2 4.2 0 0 0 7 0"/><line x1="9" y1="9.3" x2="9" y2="10"/><line x1="15" y1="9.3" x2="15" y2="10"/></svg>
       </button>
@@ -2186,66 +2180,64 @@
     <div class="menu-scroll">
       <!-- header -->
       <div class="menu-head">
-
-        <div class="menu-private">PRIVATE<br>SPACE</div>
+        <span class="menu-brand">镜花水月</span>
+        <button type="button" class="menu-conn" id="menuConn"><i></i><span id="menuConnText">未连接</span></button>
       </div>
 
-      <!-- hero · 镜 -->
+      <!-- hero -->
       <div class="menu-hero">
-        <div class="moon-clock" id="moonClock">--<i class="cln">:</i>--</div>
+        <div class="moon-clock" id="moonClock">--:--</div>
         <div class="moon-date" id="moonDate">—</div>
-        <h1 class="menu-title">镜花水月</h1>
-        <p class="menu-since">since 2026/01/01</p>
-        <div class="menu-days"><span class="num" id="menuDays">0</span><span class="lab">Days together</span></div>
-        <div class="moon-line" id="moonLine"></div>
+        <div class="menu-days"><span class="num" id="menuDays">—</span><span class="lab">天</span></div>
+        <p class="moon-line" id="moonLine"></p>
       </div>
 
       <!-- list -->
       <nav class="menu-list" aria-label="主菜单">
         <button class="menu-item" type="button" data-menu="chat">
           <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5Z"/></svg></span>
-          <span class="menu-copy"><span class="menu-name">水 · 说话</span><span class="menu-sub">Room</span></span>
+          <span class="menu-copy"><span class="menu-name">水</span><span class="menu-sub">Room</span></span>
         </button>
         <button class="menu-item" type="button" data-menu="moon">
           <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14.5A8 8 0 019.5 5 8 8 0 1019 14.5z"/></svg></span>
-          <span class="menu-copy"><span class="menu-name">月 · 月相</span><span class="menu-sub">Moon</span></span>
+          <span class="menu-copy"><span class="menu-name">月</span><span class="menu-sub">Moon</span></span>
         </button>
         <button class="menu-item" type="button" data-menu="album">
           <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.4"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-4.6-4.6L7 21"/></svg></span>
-          <span class="menu-copy"><span class="menu-name">影 · 相册</span><span class="menu-sub">Album</span></span>
+          <span class="menu-copy"><span class="menu-name">影</span><span class="menu-sub">Album</span></span>
         </button>
         <button class="menu-item" type="button" data-menu="diary">
           <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h11a2 2 0 012 2V21H7a2 2 0 01-2-2z"/><path d="M5 17.5h13"/><path d="M9 8h6M9 11.5h4"/></svg></span>
-          <span class="menu-copy"><span class="menu-name">记 · 日记</span><span class="menu-sub">Diary</span></span>
+          <span class="menu-copy"><span class="menu-name">记</span><span class="menu-sub">Diary</span></span>
         </button>
         <button class="menu-item" type="button" data-menu="wish">
           <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5c.8 5 3.5 7.7 8.5 8.5-5 .8-7.7 3.5-8.5 8.5-.8-5-3.5-7.7-8.5-8.5 5-.8 7.7-3.5 8.5-8.5Z"/></svg></span>
-          <span class="menu-copy"><span class="menu-name">愿 · 愿望</span><span class="menu-sub">Wishes</span></span>
+          <span class="menu-copy"><span class="menu-name">愿</span><span class="menu-sub">Wishes</span></span>
         </button>
         <button class="menu-item" type="button" data-menu="focus">
           <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg></span>
-          <span class="menu-copy"><span class="menu-name">钟 · 专注</span><span class="menu-sub">Focus</span></span>
+          <span class="menu-copy"><span class="menu-name">钟</span><span class="menu-sub">Focus</span></span>
         </button>
         <button class="menu-item" type="button" data-menu="tide">
           <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5c1.8-2.2 3.6-2.2 5.4 0s3.6 2.2 5.4 0 3.6-2.2 5.4 0"/><path d="M3 13c1.8-2.2 3.6-2.2 5.4 0s3.6 2.2 5.4 0 3.6-2.2 5.4 0"/><path d="M3 17.5c1.8-2.2 3.6-2.2 5.4 0s3.6 2.2 5.4 0 3.6-2.2 5.4 0"/></svg></span>
-          <span class="menu-copy"><span class="menu-name">潮 · 周期</span><span class="menu-sub">Tide</span></span>
+          <span class="menu-copy"><span class="menu-name">潮</span><span class="menu-sub">Tide</span></span>
         </button>
         <button class="menu-item" type="button" data-menu="breath">
           <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.6" opacity=".55"/></svg></span>
-          <span class="menu-copy"><span class="menu-name">息 · 呼吸</span><span class="menu-sub">Breath</span></span>
+          <span class="menu-copy"><span class="menu-name">息</span><span class="menu-sub">Breath</span></span>
         </button>
         <button class="menu-item" type="button" data-menu="pills">
           <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="8.5" width="17" height="7" rx="3.5"/><path d="M12 8.5v7"/></svg></span>
-          <span class="menu-copy"><span class="menu-name">药 · 提示</span><span class="menu-sub">Pills</span></span>
+          <span class="menu-copy"><span class="menu-name">药</span><span class="menu-sub">Pills</span></span>
         </button>
         <button class="menu-item" type="button" data-menu="archive">
           <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.6"/><path d="M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9"/><path d="M10 13h4"/></svg></span>
-          <span class="menu-copy"><span class="menu-name">存 · 存档</span><span class="menu-sub">Archive</span></span>
+          <span class="menu-copy"><span class="menu-name">存</span><span class="menu-sub">Archive</span></span>
         </button>
       </nav>
 
       <!-- footer -->
-      <div class="menu-foot">in endless tides, we find each other.</div>
+      <div class="menu-foot"><button type="button" class="menu-foot-link" id="menuSettings">设置</button><span>v1.0</span></div>
     </div>
   </div>
 </div>
@@ -2506,9 +2498,8 @@ function applyIdentity(){
   try{ document.title = APP_NAME; }catch(_){}
   const setText = (sel, val) => { const el = document.querySelector(sel); if (el) el.textContent = val; };
   const setAttr = (sel, a, val) => { const el = document.querySelector(sel); if (el) el.setAttribute(a, val); };
-  setText(".login h1", "镜花水月");
-  setText(".login .sub", "输入连接密钥，回到你和" + AI_NAME + "的水面。");
-  const emp = document.querySelector("#empty p"); if (emp) emp.innerHTML = "这里只有你和" + AI_NAME + "。<br>说点什么吧。";
+  /* 首页标题由 moon.js 负责，这里不动 */
+  const emp = document.querySelector("#empty p"); if (emp) emp.innerHTML = "还没有消息。";
   setText(".call-name", AI_NAME);
   setAttr("#callAvatarImg", "aria-label", AI_NAME);
   setText(".incoming-call-title", AI_NAME + "来电");
