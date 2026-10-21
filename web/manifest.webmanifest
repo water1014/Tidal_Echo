@@ -1,11 +1,13 @@
 {
-  "name": "Tidal Echo",
-  "short_name": "Tidal Echo",
+  "name": "镜花水月",
+  "short_name": "镜花水月",
+  "description": "只属于你和她的水面 · 私密 1:1 通道",
+  "lang": "zh-CN",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
-  "background_color": "#f1ece4",
-  "theme_color": "#f1ece4",
+  "background_color": "#C9D2DE",
+  "theme_color": "#C9D2DE",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

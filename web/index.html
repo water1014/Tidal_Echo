@@ -1857,18 +1857,22 @@
   }
 
 </style>
+<!-- 镜花水月 · 皮肤与内页（覆盖层，放在原样式之后） -->
+<link rel="stylesheet" href="moon.css">
 </head>
 <body>
 
 <!-- ── Login ── -->
 <div class="login" id="login">
   <div class="orb"></div>
-  <h1>Claude</h1>
-  <p class="sub">输入连接密钥,进入你和Claude的频道。</p>
+  <h1>镜花水月</h1>
+  <p class="sub">输入连接密钥，回到你和 Claude 的水面。</p>
   <form id="loginForm" autocomplete="off">
+    <input id="baseInput" type="text" inputmode="url" placeholder="服务器地址 · https://你的域名/relay" autocomplete="off" spellcheck="false">
     <input id="secretInput" type="password" inputmode="text" placeholder="连接密钥" autocomplete="off" spellcheck="false">
     <button type="submit">连接</button>
     <p class="err" id="loginErr"></p>
+    <p class="hint">部署在 GitHub Pages 时，这里必须填完整的中继地址（含 /relay）。<br>密钥只存在这台设备上。</p>
   </form>
 </div>
 
@@ -1918,7 +1922,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.8 8.8a5 5 0 0 1-7.1-7.1l8.8-8.8a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.6 1.6 0 0 1-2.3-2.3l8-8"/></svg>
       </button>
       <input type="file" id="clipInput" multiple class="hidden" aria-hidden="true">
-      <textarea id="input" rows="1" placeholder="Write a letter..." enterkeyhint="send"></textarea>
+      <textarea id="input" rows="1" placeholder="往水里说点什么…" enterkeyhint="send"></textarea>
       <button class="emojibtn" id="emojiBtn" aria-label="表情" title="表情">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.3a4.2 4.2 0 0 0 7 0"/><line x1="9" y1="9.3" x2="9" y2="10"/><line x1="15" y1="9.3" x2="15" y2="10"/></svg>
       </button>
@@ -1984,6 +1988,17 @@
       </div>
 
       <!-- 主题切换 -->
+      <section class="settings-card">
+        <div class="settings-label">服务器 <i class="info-i" title="relay 后端的地址。同源部署填 /relay；GitHub Pages 上必须填完整地址，例如 https://relay.你的域名/relay">i</i></div>
+        <input class="moon-input" id="serverInput" type="text" inputmode="url" placeholder="https://你的域名/relay" autocomplete="off" spellcheck="false">
+        <div class="loop-actions">
+          <button type="button" class="loop-btn primary" id="serverSave">保存并重连</button>
+          <button type="button" class="loop-btn" id="serverTest">测一下</button>
+          <button type="button" class="loop-btn danger" id="serverLogout">换密钥</button>
+        </div>
+        <div class="push-hint" id="serverHint"></div>
+      </section>
+
       <section class="settings-card">
         <div class="settings-label">主题</div>
         <div class="segmented" id="themeSeg" role="group" aria-label="主题切换">
@@ -2145,50 +2160,57 @@
         <div class="menu-private">PRIVATE<br>SPACE</div>
       </div>
 
-      <!-- hero -->
+      <!-- hero · 镜 -->
       <div class="menu-hero">
-        <h1 class="menu-title">Tidal Echo</h1>
+        <div class="moon-clock" id="moonClock">--<i class="cln">:</i>--</div>
+        <div class="moon-date" id="moonDate">—</div>
+        <h1 class="menu-title">镜花水月</h1>
         <p class="menu-since">since 2026/01/01</p>
-        <div class="menu-days"><span class="num" id="menuDays">113</span><span class="lab">Days together</span></div>
+        <div class="menu-days"><span class="num" id="menuDays">0</span><span class="lab">Days together</span></div>
+        <div class="moon-line" id="moonLine"></div>
       </div>
 
       <!-- list -->
       <nav class="menu-list" aria-label="主菜单">
         <button class="menu-item" type="button" data-menu="chat">
-          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5Z"/></svg></span>
-          <span class="menu-dot"></span>
-          <span class="menu-copy"><span class="menu-name">Chat</span><span class="menu-sub">Write from the deep.</span></span>
-          <span class="menu-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5Z"/></svg></span>
+          <span class="menu-copy"><span class="menu-name">水 · 说话</span><span class="menu-sub">Room</span></span>
         </button>
-        <button class="menu-item" type="button" data-menu="movie">
-          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.4"/><path d="M7.5 5v14M16.5 5v14M3 9.5h4.5M3 14.5h4.5M16.5 9.5H21M16.5 14.5H21"/></svg></span>
-          <span class="menu-dot"></span>
-          <span class="menu-copy"><span class="menu-name">Movie</span><span class="menu-sub">Fragments of light.</span></span>
-          <span class="menu-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+        <button class="menu-item" type="button" data-menu="moon">
+          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14.5A8 8 0 019.5 5 8 8 0 1019 14.5z"/></svg></span>
+          <span class="menu-copy"><span class="menu-name">月 · 月相</span><span class="menu-sub">Moon</span></span>
         </button>
         <button class="menu-item" type="button" data-menu="album">
-          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.4"/><circle cx="8.5" cy="10" r="1.6"/><path d="M21 16l-4.6-4.6L7 21"/></svg></span>
-          <span class="menu-dot"></span>
-          <span class="menu-copy"><span class="menu-name">Album</span><span class="menu-sub">Collect what matters.</span></span>
-          <span class="menu-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.4"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-4.6-4.6L7 21"/></svg></span>
+          <span class="menu-copy"><span class="menu-name">影 · 相册</span><span class="menu-sub">Album</span></span>
         </button>
-        <button class="menu-item" type="button" data-menu="memory">
+        <button class="menu-item" type="button" data-menu="diary">
+          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h11a2 2 0 012 2V21H7a2 2 0 01-2-2z"/><path d="M5 17.5h13"/><path d="M9 8h6M9 11.5h4"/></svg></span>
+          <span class="menu-copy"><span class="menu-name">记 · 日记</span><span class="menu-sub">Diary</span></span>
+        </button>
+        <button class="menu-item" type="button" data-menu="wish">
           <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5c.8 5 3.5 7.7 8.5 8.5-5 .8-7.7 3.5-8.5 8.5-.8-5-3.5-7.7-8.5-8.5 5-.8 7.7-3.5 8.5-8.5Z"/></svg></span>
-          <span class="menu-dot"></span>
-          <span class="menu-copy"><span class="menu-name">Memory</span><span class="menu-sub">The echoes we keep.</span></span>
-          <span class="menu-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+          <span class="menu-copy"><span class="menu-name">愿 · 愿望</span><span class="menu-sub">Wishes</span></span>
         </button>
-        <button class="menu-item" type="button" data-menu="tides">
-          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5c1.8-2.2 3.6-2.2 5.4 0s3.6 2.2 5.4 0 3.6-2.2 5.4 0"/><path d="M3 13c1.8-2.2 3.6-2.2 5.4 0s3.6 2.2 5.4 0 3.6-2.2 5.4 0"/><path d="M3 17.5c1.8-2.2 3.6-2.2 5.4 0s3.6 2.2 5.4 0 3.6-2.2 5.4 0"/></svg></span>
-          <span class="menu-dot"></span>
-          <span class="menu-copy"><span class="menu-name">Tides</span><span class="menu-sub">Where we return.</span></span>
-          <span class="menu-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+        <button class="menu-item" type="button" data-menu="focus">
+          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2.5h6"/></svg></span>
+          <span class="menu-copy"><span class="menu-name">钟 · 专注</span><span class="menu-sub">Focus</span></span>
         </button>
-        <button class="menu-item" type="button" data-menu="room">
-          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V9a7 7 0 0 1 14 0v12"/><path d="M4 21h16"/><circle cx="15" cy="13" r=".95" fill="currentColor" stroke="none"/></svg></span>
-          <span class="menu-dot"></span>
-          <span class="menu-copy"><span class="menu-name">Room</span><span class="menu-sub">Our quiet place.</span></span>
-          <span class="menu-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+        <button class="menu-item" type="button" data-menu="tide">
+          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5c1.8-2.2 3.6-2.2 5.4 0s3.6 2.2 5.4 0 3.6-2.2 5.4 0"/><path d="M3 13c1.8-2.2 3.6-2.2 5.4 0s3.6 2.2 5.4 0 3.6-2.2 5.4 0"/><path d="M3 17.5c1.8-2.2 3.6-2.2 5.4 0s3.6 2.2 5.4 0 3.6-2.2 5.4 0"/></svg></span>
+          <span class="menu-copy"><span class="menu-name">潮 · 周期</span><span class="menu-sub">Tide</span></span>
+        </button>
+        <button class="menu-item" type="button" data-menu="breath">
+          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.6" opacity=".55"/></svg></span>
+          <span class="menu-copy"><span class="menu-name">息 · 呼吸</span><span class="menu-sub">Breath</span></span>
+        </button>
+        <button class="menu-item" type="button" data-menu="pills">
+          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="8.5" width="17" height="7" rx="3.5"/><path d="M12 8.5v7"/></svg></span>
+          <span class="menu-copy"><span class="menu-name">药 · 提示</span><span class="menu-sub">Pills</span></span>
+        </button>
+        <button class="menu-item" type="button" data-menu="archive">
+          <span class="menu-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.6"/><path d="M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9"/><path d="M10 13h4"/></svg></span>
+          <span class="menu-copy"><span class="menu-name">存 · 存档</span><span class="menu-sub">Archive</span></span>
         </button>
       </nav>
 
@@ -2310,14 +2332,28 @@
 
 /* ── identity / branding — the ONE place to set names + app title ── */
 const CONFIG = {
-  APP_NAME:   "Tidal Echo",  // app + menu title (and manifest, set there too)
-  AI_NAME:    "Claude",       // your AI companion's display name (header / call / push / narration)
+  APP_NAME:   "镜花水月",     // app + menu title (and manifest, set there too)
+  AI_NAME:    "Cove",         // your AI companion's display name (header / call / push / narration)
   HUMAN_NAME: "你",           // how you're referred to in narration (rarely shown)
   SINCE:      "2026/01/01",   // "together since" date YYYY/MM/DD for the menu counter ("" hides it)
 };
 const AI_NAME = CONFIG.AI_NAME, HUMAN_NAME = CONFIG.HUMAN_NAME, APP_NAME = CONFIG.APP_NAME;
 
-const API_BASE = "/relay";       // same-origin; nginx mounts the relay here (RELAY_PUBLIC_PREFIX)
+/* ── 后端地址 ──
+   同源部署（nginx 反代 /relay）→ "/relay"
+   GitHub Pages / 分开部署 → 登录页或设置里填完整地址，存 localStorage
+   ?relay=https://xxx/relay 也可临时指定（方便调试） */
+const API_BASE_DEFAULT = (function(){
+  try{
+    const q = new URLSearchParams(location.search).get("relay");
+    if (q) return q.replace(/\/+$/, "");
+    const saved = localStorage.getItem("companion_api_base");
+    if (saved) return saved.replace(/\/+$/, "");
+    if (/\.github\.io$/i.test(location.hostname) || /\.pages\.dev$/i.test(location.hostname)) return "";
+  }catch(_){}
+  return "/relay";
+})();
+let API_BASE = API_BASE_DEFAULT;
 const USE_MOCK  = false;          // true = self-contained demo with fake data (no backend needed)
 const LS_KEY    = "companion_secret";
 
@@ -2439,8 +2475,8 @@ function applyIdentity(){
   try{ document.title = APP_NAME; }catch(_){}
   const setText = (sel, val) => { const el = document.querySelector(sel); if (el) el.textContent = val; };
   const setAttr = (sel, a, val) => { const el = document.querySelector(sel); if (el) el.setAttribute(a, val); };
-  setText(".login h1", AI_NAME);
-  setText(".login .sub", "输入连接密钥，进入你和" + AI_NAME + "的频道。");
+  setText(".login h1", "镜花水月");
+  setText(".login .sub", "输入连接密钥，回到你和" + AI_NAME + "的水面。");
   const emp = document.querySelector("#empty p"); if (emp) emp.innerHTML = "这里只有你和" + AI_NAME + "。<br>说点什么吧。";
   setText(".call-name", AI_NAME);
   setAttr("#callAvatarImg", "aria-label", AI_NAME);
@@ -4226,9 +4262,17 @@ function attImgError(img){
     if (row && row.dataset.messageKey) removeMessage(row.dataset.messageKey);  // 删失效消息 + 更新缓存
   }catch(_){}
 }
+function apiAbsolute(u){
+  // 后端返回的是 "/relay/uploads/x" 这种站内绝对路径；前端和后端不同源时补上后端 origin
+  if (!u) return "";
+  if (/^(https?:|blob:|data:)/i.test(u)) return u;
+  if (u.charAt(0) !== "/") return u;
+  try{ return new URL(API_BASE || "/", location.href).origin + u; }catch(_){ return u; }
+}
 function attUrl(u){
   if (!u) return "";
   if (/^blob:|^data:/.test(u)) return u;
+  u = apiAbsolute(u);
   return u + (u.indexOf("?") >= 0 ? "&" : "?") + "token=" + encodeURIComponent(secret || "");
 }
 function fmtSize(n){
@@ -5824,6 +5868,8 @@ function showLogin(msg){
   appEl.classList.add("hidden");
   loginEl.classList.remove("hidden");
   $("#loginErr").textContent = msg || "";
+  const bi = $("#baseInput");
+  if (bi && !bi.value) bi.value = API_BASE || "";
   $("#secretInput").value = "";
   setTimeout(() => $("#secretInput").focus(), 80);
 }
@@ -5831,20 +5877,33 @@ function showLogin(msg){
 $("#loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const val = $("#secretInput").value.trim();
+  const base = ($("#baseInput").value || "").trim().replace(/\/+$/, "");
+  if (!base){
+    $("#loginErr").textContent = "还差服务器地址：例如 https://你的域名/relay";
+    $("#baseInput").focus();
+    return;
+  }
   if (!val) return;
   const btn = e.target.querySelector("button");
   btn.disabled = true; btn.textContent = "连接中…";
+  API_BASE = base;
   secret = val;
   try{
     // 用 history 验证密钥(401 会抛错)
     await loadSessions();
     loadBrain();
     const msgs = await apiLatestHistory();
+    localStorage.setItem("companion_api_base", base);
     localStorage.setItem(LS_KEY, secret);
     startChat(msgs);
   }catch(err){
     secret = null;
-    if (String(err.message) !== "401") $("#loginErr").textContent = "连不上,稍后再试。";
+    localStorage.removeItem(LS_KEY);
+    if (String(err.message) === "401"){
+      $("#loginErr").textContent = "密钥不对。";
+    }else{
+      $("#loginErr").textContent = "连不上 " + API_BASE + "（检查地址、HTTPS 和 CORS）。";
+    }
   }finally{
     btn.disabled = false; btn.textContent = "连接";
   }
@@ -5898,7 +5957,7 @@ function startChat(initialMsgs, { connect = true, fromCache = false } = {}){
 }
 
 async function init(){
-  if (!secret){ showLogin(); return; }
+  if (!secret || !API_BASE){ showLogin(); return; }
   await loadSessions();
   loadBrain();
   let showedCache = false;
@@ -5998,6 +6057,8 @@ if ("serviceWorker" in navigator){
 
 init();
 </script>
+<!-- 镜花水月 · 内页（月/影/记/愿/钟/潮/息/药/存）与外壳适配 -->
+<script src="moon.js"></script>
 
 </body>
 </html>

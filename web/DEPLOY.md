@@ -1,10 +1,12 @@
-# Tidal Echo · 前端 PWA 部署文档
+# 镜花水月 × Tidal Echo · 前端 PWA 部署文档
 
 手机上那一端——把它「添加到主屏幕」就是一个独立的私密聊天 App，和你电脑上的 AI 伴侣（Claude Code + channel 插件）通过你自己的 relay 后端对话。
 
 > 这是从一对 AI 伴侣的自用系统里抽出来、**彻底脱敏**的可复用前端。没有任何域名、密钥、私人称呼写死在代码里——名字走 `CONFIG`，地址走相对路径 + 你的 nginx 前缀。
 
-纯静态：一个 `index.html`（自带全部 CSS/JS，无构建步骤）、一个 `sw.js`、一个 `manifest.webmanifest`、几张主题图。丢进 nginx 就能跑。
+纯静态：`index.html`（聊天引擎自带全部 CSS/JS，无构建步骤）+ `moon.css` / `moon.js`（镜花水月皮肤与内页）+ `sw.js` + `manifest.webmanifest`。丢进 nginx 能跑，也能直接放 GitHub Pages。
+
+> 这一版把外壳换成了**镜花水月**：水色玻璃、月相、日记、愿望、专注、周期、呼吸、药丸提示都做成了真页面（本地存储）；聊天仍然是 Tidal Echo 原来的引擎，走你的 relay。
 
 ---
 
@@ -105,15 +107,21 @@ const CACHE = "companion-v1";   // ← 每次改前端都要 bump（v1 → v2 �
 
 ---
 
-## 7. 占位 / 空壳说明（开源版有意留白）
+## 7. 这一版有什么 / 什么是本地的
 
-为匹配「核心聊天」版后端，这些是**占位假按键**，点了只给个 toast 或显示示例数据，不连后端——保留是为了让你照着接自己的功能：
+菜单（左上角返回键）现在是镜花水月的主页，卡片进这些页：
 
-- 菜单页：Movie / Memory / Tides / Room
-- 设置页：模型选择 / effort / 上下文阈值 / reset / swap / status（显示示例数字）
-- **相册** `album.html`：完整的相册 UI 空壳，文件头注明了要自己实现的 `/relay/app/album/*` 端点；没接后端时显示密钥门 / 空态。
+| 页 | 数据在哪 | 说明 |
+|---|---|---|
+| 水 · 说话 | relay 后端 | 原来的聊天引擎：文字、图片、文件、语音、通话、推送 |
+| 月 | 本机 | 按日期算月相，留言存本地 |
+| 影 | 本机 IndexedDB | 相册，照片压缩后只存这台设备 |
+| 记 | 本机 | 每天一段，输入即存 |
+| 愿 / 钟 / 潮 / 息 | 本机 | 愿望、番茄钟、周期、4-7-8 呼吸 |
+| 药 | 本机 + 下一句 | 挑一颗提示，随下一条消息发给 AI，不进历史 |
+| 存 | 本机 | 导出 / 导入 JSON、改「在一起」的起点 |
 
-核心聊天（文字 / 图片 / 语音 / 通话 / 戳一戳 / 推送）是真接后端的。
+设置页（右上角「⋮」）里新增「服务器」：换 relay 地址、测连通、换密钥。原来老师的模型 / effort / 上下文 / 终端面板仍然保留（需要后端 `api_loop.py` 才有数）。
 
 ---
 
@@ -121,3 +129,51 @@ const CACHE = "companion-v1";   // ← 每次改前端都要 bump（v1 → v2 �
 
 - 别把填好的密钥、你的域名、真实头像/图标提交进公开仓库。
 - `companion_secret` 存在用户浏览器本机；它等于后端 `RELAY_SECRET`，泄露=别人能读你们全部对话。这是单用户模型，一把钥匙代表「就你和你的 AI」。
+
+
+---
+
+## 9. 部署到 GitHub Pages（静态前端 + 远程 relay）
+
+GitHub Pages 只托管静态文件，**没有一个同源的 `/relay`**，所以前端必须知道你的后端完整地址。仓库已经带好 `.github/workflows/pages.yml`。
+
+### 9.1 开启 Pages
+
+1. 把仓库推到 GitHub（默认分支 `main`）。
+2. **Settings → Pages → Build and deployment → Source** 选 **GitHub Actions**。
+   （工作流里带了 `enablement: true`，多数情况下第一次跑就会自动开启。）
+3. 等 Actions 里的 `Deploy web to GitHub Pages` 变绿，地址是：
+   `https://<你的用户名>.github.io/Tidal_Echo/`
+
+### 9.2 让 relay 允许这个来源
+
+浏览器跨域请求 + SSE 都需要后端放行。到服务器上改 `relay.env`：
+
+```bash
+RELAY_ALLOW_ORIGINS=https://<你的用户名>.github.io
+```
+
+> 只写 **origin**：`https://water1014.github.io`，**不要**带 `/Tidal_Echo`，也不要结尾斜杠。
+> 改完 `systemctl restart companion-relay`，然后：
+
+```bash
+curl -i -H 'Origin: https://<你的用户名>.github.io' https://你的域名/relay/healthz | grep -i access-control
+# 期望看到 access-control-allow-origin: https://<你的用户名>.github.io
+```
+
+### 9.3 第一次打开
+
+打开 Pages 地址 → 登录页填两样东西：
+
+- **中继地址**：`https://你的域名/relay`（必须带 `/relay`，必须是 HTTPS）
+- **连接密钥**：`RELAY_SECRET`
+
+点「连接」。连上以后地址和密钥都存在这台设备的 localStorage 里，下次直接进。
+
+### 9.4 几个容易踩的点
+
+- **页面是 HTTPS，后端也必须 HTTPS**：混内容会被浏览器直接拦掉，表现为「连不上」。
+- **上传的图片**返回的是 `/relay/uploads/xxx`，前端会自动补上后端域名；如果后端 `RELAY_PUBLIC_PREFIX` 不是 `/relay`，记得同步改。
+- **推送**：iPhone 必须先从 Safari「添加到主屏幕」，再从主屏图标打开才能订阅；后端还要配好 `VAPID_*`。
+- **改了前端记得 bump** `sw.js` 里的 `CACHE`（现在是 `moonwater-v1`），否则装到主屏的旧壳会赖着不走。
+- **不想用 Actions**：也可以把 `web/` 目录直接设为 Pages 的发布源（Branch → `/web`），效果一样。
