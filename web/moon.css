@@ -734,3 +734,69 @@ html[data-theme="harbor"] .menu-item .menu-ic{
 }
 html[data-theme="harbor"] .mbtn{ background:rgba(185,205,240,.12); border-color:rgba(185,205,240,.2); color:#C9D6EA; }
 html[data-theme="harbor"] .mitem .x:hover{ color:#D89C97; }
+
+/* ---------------- 登录页的另外两条路 ---------------- */
+.login-alt{
+  display:flex; align-items:center; gap:8px; margin-top:6px;
+  font-family:var(--sans); color:var(--ink-3);
+}
+.login-alt span{ opacity:.5; font-size:10px; }
+.login-alt button{
+  border:0; background:transparent; cursor:pointer; padding:4px 2px;
+  font-family:var(--sans); font-weight:300; font-size:11.5px; letter-spacing:.06em;
+  color:var(--text-soft); border-bottom:1px solid var(--line-2); transition:all .25s;
+}
+.login-alt button:hover{ color:var(--text); border-color:var(--wave); }
+
+/* ---------------- 纯本地：没有输入栏 ---------------- */
+body.local-only .composer{ display:none !important; }
+body.local-only .scroll{
+  padding-bottom: calc(env(safe-area-inset-bottom) + 28px);
+  -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 var(--edge-fade-top), #000 88%, transparent 100%);
+  mask-image:linear-gradient(to bottom, transparent 0, #000 var(--edge-fade-top), #000 88%, transparent 100%);
+}
+body.local-only .newmsg-pill{ display:none !important; }
+body.local-only .topbtn.call{ display:none; }
+
+/* 直连模式下没有窗口 / 终端 / 通话（那些要靠 relay 或 api_loop） */
+body.direct-mode .topbtn.sessions,
+body.direct-mode .topbtn.terminal,
+body.direct-mode .topbtn.call{ display:none; }
+
+/* 设置里的直连卡片：字段之间留白 */
+#directCard .moon-input{ font-size:12.5px; }
+#directCard .loop-actions{ margin-top:4px; }
+#directCard .mrow .mbtn{ margin-bottom:2px; }
+
+/* ---------------- 空状态（本地 / 直连首次进入） ---------------- */
+#empty{
+  position:absolute; inset:0; z-index:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:16px; padding:0 clamp(24px,8vw,48px); text-align:center; pointer-events:none;
+}
+#empty .orb{
+  width:58px; height:58px; border-radius:50%; flex:0 0 auto;
+  background:radial-gradient(circle at 38% 32%, #FFFDF4, #F1E5C2 46%, rgba(206,182,126,.24) 66%, transparent 74%);
+  box-shadow:0 0 42px 14px rgba(206,182,126,.2);
+  animation:moonBreath 6s ease-in-out infinite;
+}
+#empty p{
+  margin:0; max-width:26em;
+  font-family:var(--sans); font-weight:300; font-size:13px; line-height:2.1;
+  color:var(--text-soft); letter-spacing:.03em;
+}
+@keyframes moonBreath{ 0%,100%{ transform:scale(1); opacity:.9 } 50%{ transform:scale(1.05); opacity:1 } }
+html[data-theme="harbor"] #empty .orb{
+  background:radial-gradient(circle at 38% 32%, #FFFDF4, #EFE3BD 50%, rgba(232,217,168,.18) 68%, transparent 76%);
+  box-shadow:0 0 46px 16px rgba(232,217,168,.14);
+}
+
+/* 登录页两条备选路：竖排，别挤成两行 */
+.login-alt{
+  flex-direction:column; gap:2px; margin-top:14px; text-align:center;
+}
+.login-alt .or{
+  font-size:9px; letter-spacing:.3em; text-transform:uppercase;
+  color:var(--ink-4); margin:2px 0;
+}
+.login-alt button{ white-space:nowrap; font-size:12px; }

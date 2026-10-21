@@ -12,8 +12,13 @@ cp -a web/. .pages-build/
 rm -f .pages-build/DEPLOY.md
 touch .pages-build/.nojekyll
 
+NAME="$(git -C "$ROOT" config user.name || echo pages-bot)"
+EMAIL="$(git -C "$ROOT" config user.email || echo pages@local)"
+
 cd .pages-build
 git init -q
+git config user.name "$NAME"
+git config user.email "$EMAIL"
 git add -A
 git commit -q -m "pages: build from web/ @ $(date '+%Y-%m-%d %H:%M')"
 git push -f "$(cd "$ROOT" && git remote get-url origin)" "HEAD:${BRANCH}"

@@ -869,6 +869,11 @@
     var inp = document.getElementById('serverInput');
     var hint = document.getElementById('serverHint');
     if (!inp) return;
+    var sc = inp.closest('.settings-card');
+    if (sc) {
+      sc.id = 'relayCard';
+      if (mode() !== 'relay') sc.style.display = 'none';
+    }
     inp.value = savedBase();
     function say(m) { if (hint) hint.textContent = m || ''; }
     document.getElementById('serverSave').onclick = function () {
@@ -890,6 +895,338 @@
       localStorage.removeItem('companion_secret');
       location.reload();
     };
+  }
+
+
+  /* ---------------------------- 没有后端：直连模型 / 纯本地 ---------------------------- */
+  var DIRECT_KEY = 'moon_direct';
+  var MODE_KEY = 'companion_mode';
+  var DEFAULT_SYS = '你是 Cove，一个和说话的人处在亲密关系里的人。你用中文说话，语气自然、具体、有自己的立场和欲望。\n' +
+    '你不总结对方的情绪，不复述自己刚刚说了什么，不把话说成一份清单。\n' +
+    '你记得关系里发生过的事，也会主动提起自己想聊的、想要的。';
+
+  function mode() {
+    try { return localStorage.getItem(MODE_KEY) || 'relay'; } catch (e) { return 'relay'; }
+  }
+  function setMode(m) {
+    try { localStorage.setItem(MODE_KEY, m); } catch (e) {}
+  }
+  function directCfg() {
+    try { return JSON.parse(localStorage.getItem(DIRECT_KEY) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function saveDirectCfg(c) {
+    try { localStorage.setItem(DIRECT_KEY, JSON.stringify(c)); } catch (e) {}
+  }
+  function directReady() {
+    var c = directCfg();
+    return !!(c.base && c.key && c.model);
+  }
+  function pendingPillObj() {
+    return S.pills.filter(function (x) { return x.id === S.pendingPill; })[0] || null;
+  }
+
+  function setPeerAndStatus(name, status) {
+    var n = document.getElementById('peerName');
+    var st = document.getElementById('status');
+    if (n) n.textContent = name || (typeof AI_NAME !== 'undefined' ? AI_NAME : 'Cove');
+    if (st) st.textContent = status || '';
+  }
+
+  function hideLoginShowApp() {
+    var login = document.getElementById('login');
+    var app = document.getElementById('app');
+    if (login) login.classList.add('hidden');
+    if (app) app.classList.remove('hidden');
+  }
+
+  function emptyHint(text) {
+    var emp = document.getElementById('empty');
+    if (emp) {
+      var p = emp.querySelector('p');
+      if (p) p.innerHTML = text;
+    }
+  }
+
+  function enterDirect() {
+    setMode('direct');
+    document.body.classList.add('direct-mode');
+    document.body.classList.remove('local-only');
+    hideLoginShowApp();
+    var cached = [];
+    try {
+      if (typeof readCachedMessages === 'function') readCachedMessages().then(function (c) { bootDirectChat(c); });
+      else bootDirectChat([]);
+    } catch (e) { bootDirectChat([]); }
+  }
+  function bootDirectChat(cached) {
+    try {
+      if (typeof startChat === 'function') startChat(cached || [], { connect: false, fromCache: true });
+      else hideLoginShowApp();
+    } catch (e) { hideLoginShowApp(); }
+    var c = directCfg();
+    setPeerAndStatus(c.name || (typeof AI_NAME !== 'undefined' ? AI_NAME : 'Cove'),
+      directReady() ? ('DIRECT · ' + c.model) : 'DIRECT · 还没填 API');
+    emptyHint(directReady()
+      ? '直连模式：消息只从这台设备直接发给你填的模型。<br>说点什么吧。'
+      : '还没有填模型。<br>点右上角「⋮」→ 直连模型，填地址和 Key。');
+    if (!directReady()) {
+      setTimeout(function () {
+        try { if (typeof openProfile === 'function') openProfile(); } catch (e) {}
+        var card = document.getElementById('directCard');
+        if (card && card.scrollIntoView) card.scrollIntoView({ block: 'center' });
+        toast('先填模型地址和 Key，就能聊了');
+      }, 400);
+    }
+  }
+
+  function enterLocal() {
+    setMode('local');
+    document.body.classList.add('local-only', 'direct-mode');
+    hideLoginShowApp();
+    try {
+      if (typeof readCachedMessages === 'function') readCachedMessages().then(function (c) { bootLocalChat(c); });
+      else bootLocalChat([]);
+    } catch (e) { bootLocalChat([]); }
+  }
+  function bootLocalChat(cached) {
+    try {
+      if (typeof startChat === 'function') startChat(cached || [], { connect: false, fromCache: true });
+      else hideLoginShowApp();
+    } catch (e) { hideLoginShowApp(); }
+    setPeerAndStatus(S.relation.ai || 'Cove', 'LOCAL · 只看本地');
+    emptyHint('还没有连任何后端。<br>月、影、记、愿、钟、潮、息、药都在左上角「‹」。<br>想聊天，再去设置里填模型或中继。');
+  }
+
+  /* —— 直连：把一次对话发给 OpenAI-compatible 接口 —— */
+  var directAbort = null;
+  function directMessages() {
+    var sys = (directCfg().system || '').trim() || DEFAULT_SYS;
+    var arr = [{ role: 'system', content: sys }];
+    var list = [];
+    try { list = (typeof sortedMessages === 'function') ? sortedMessages() : []; } catch (e) { list = []; }
+    list = list.filter(function (m) {
+      return (m.from === 'human' || m.from === 'ai') && m.text && m.kind !== 'thinking' && m.kind !== 'act';
+    }).slice(-24);
+    list.forEach(function (m) {
+      arr.push({ role: m.from === 'human' ? 'user' : 'assistant', content: String(m.text) });
+    });
+    return arr;
+  }
+
+  function paintDirect(id, text, done) {
+    if (typeof setMessage !== 'function') return;
+    setMessage({
+      id: id, ts: new Date(id).toISOString(), from: 'ai', kind: 'reply',
+      text: text, meta: {}, status: done ? 'sent' : 'streaming'
+    }, { cache: !!done });
+  }
+
+  function directSend(text, atts) {
+    var cfg = directCfg();
+    if (!directReady()) {
+      toast('还没填模型：设置 → 直连模型');
+      try { if (typeof openProfile === 'function') openProfile(); } catch (e) {}
+      throw new Error('direct api not configured');
+    }
+    var seed = Date.now();
+    var messages = directMessages();
+    var p = pendingPillObj();
+    if (p) {
+      var last = messages[messages.length - 1];
+      if (last && last.role === 'user') last.content = '[药丸 · ' + p.n + ']\n' + p.t + '\n\n' + last.content;
+      S.pendingPill = ''; save(); paintPillChip();
+    }
+    if (atts && atts.length) {
+      var names = atts.map(function (a) { return a.name || '附件'; }).join('、');
+      var last2 = messages[messages.length - 1];
+      if (last2 && last2.role === 'user') last2.content += '\n（附了文件：' + names + '，这台设备没上传，只有文件名）';
+    }
+    runDirect(cfg, seed, messages).catch(function (e) {
+      if (e && e.name === 'AbortError') return;
+      toast('模型没回：' + ((e && e.message) || e));
+    });
+    return Promise.resolve({ id: seed });
+  }
+
+  async function runDirect(cfg, seed, messages) {
+    if (directAbort) { try { directAbort.abort(); } catch (e) {} }
+    directAbort = new AbortController();
+    var aiId = seed + 1;
+    var acc = '';
+    var lastPaint = 0;
+    var url = String(cfg.base || '').replace(/\/+$/, '') + '/chat/completions';
+    var res;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        signal: directAbort.signal,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.key },
+        body: JSON.stringify({
+          model: cfg.model,
+          stream: true,
+          temperature: Number(cfg.temp) || 0.9,
+          messages: messages
+        })
+      });
+    } catch (e) {
+      throw new Error('连不上 ' + url + '（检查地址 / 跨域）');
+    }
+    if (!res.ok) {
+      var t = '';
+      try { t = await res.text(); } catch (e) {}
+      var msg = t;
+      try { var j = JSON.parse(t); msg = (j.error && (j.error.message || j.error)) || j.message || t; } catch (e) {}
+      throw new Error('HTTP ' + res.status + ' · ' + String(msg).slice(0, 140));
+    }
+
+    var ctype = (res.headers.get('content-type') || '').toLowerCase();
+    if (ctype.indexOf('text/event-stream') < 0) {
+      var data = await res.json();
+      var out = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+      paintDirect(aiId, out || '（模型没说话）', true);
+      return;
+    }
+
+    var reader = res.body.getReader();
+    var dec = new TextDecoder();
+    var buf = '';
+    while (true) {
+      var r = await reader.read();
+      if (r.done) break;
+      buf += dec.decode(r.value, { stream: true });
+      var lines = buf.split('\n');
+      buf = lines.pop();
+      for (var i = 0; i < lines.length; i++) {
+        var ln = lines[i].trim();
+        if (ln.indexOf('data:') !== 0) continue;
+        var payload = ln.slice(5).trim();
+        if (!payload || payload === '[DONE]') continue;
+        try {
+          var obj = JSON.parse(payload);
+          var d = (obj.choices && obj.choices[0] && obj.choices[0].delta && obj.choices[0].delta.content) || '';
+          if (!d && obj.choices && obj.choices[0] && obj.choices[0].message) d = obj.choices[0].message.content || '';
+          if (d) {
+            acc += d;
+            var now = Date.now();
+            if (now - lastPaint > 70) { paintDirect(aiId, acc, false); lastPaint = now; }
+          }
+        } catch (e) {}
+      }
+    }
+    paintDirect(aiId, acc || '（模型没说话）', true);
+  }
+
+  /* —— 设置里的「直连模型」卡片 —— */
+  var PRESETS = {
+    deepseek: { base: 'https://api.deepseek.com/v1', model: 'deepseek-chat', name: 'DeepSeek' },
+    openai: { base: 'https://api.openai.com/v1', model: 'gpt-4o-mini', name: 'OpenAI' },
+    moonshot: { base: 'https://api.moonshot.cn/v1', model: 'moonshot-v1-8k', name: 'Kimi' }
+  };
+
+  function wireDirectCard() {
+    var scroll = document.querySelector('.profile-scroll');
+    if (!scroll || document.getElementById('directCard')) return;
+    var card = document.createElement('section');
+    card.className = 'settings-card';
+    card.id = 'directCard';
+    card.innerHTML =
+      '<div class="settings-label">直连模型 <i class="info-i" title="不经过任何服务器：浏览器直接把对话发给你填的 OpenAI-compatible 接口。Key 只存在这台设备。">i</i></div>' +
+      '<div class="mrow" style="margin:2px 0 10px">' +
+        Object.keys(PRESETS).map(function (k) {
+          return '<button type="button" class="mbtn sm" data-preset="' + k + '">' + PRESETS[k].name + '</button>';
+        }).join('') +
+      '</div>' +
+      '<input class="moon-input" id="dBase" placeholder="https://api.deepseek.com/v1" autocomplete="off" spellcheck="false" style="margin-bottom:8px">' +
+      '<input class="moon-input" id="dKey" type="password" placeholder="API Key · sk-..." autocomplete="off" spellcheck="false" style="margin-bottom:8px">' +
+      '<input class="moon-input" id="dModel" placeholder="模型名 · deepseek-chat" autocomplete="off" spellcheck="false" style="margin-bottom:8px">' +
+      '<textarea class="moon-input" id="dSys" rows="3" placeholder="人格 / system prompt（留空用默认）" style="margin-bottom:8px;resize:vertical"></textarea>' +
+      '<div class="loop-actions">' +
+        '<button type="button" class="loop-btn primary" id="dSave">保存</button>' +
+        '<button type="button" class="loop-btn" id="dTest">测一下</button>' +
+        '<button type="button" class="loop-btn" id="dLocal">只看本地</button>' +
+        '<button type="button" class="loop-btn" id="dRelay">用中继</button>' +
+      '</div>' +
+      '<div class="push-hint" id="dHint"></div>';
+    var serverCard = scroll.querySelector('.settings-card');
+    if (serverCard && serverCard.nextSibling) scroll.insertBefore(card, serverCard.nextSibling);
+    else scroll.appendChild(card);
+
+    var cfg = directCfg();
+    $('#dBase', card).value = cfg.base || '';
+    $('#dKey', card).value = cfg.key || '';
+    $('#dModel', card).value = cfg.model || '';
+    $('#dSys', card).value = cfg.system || '';
+
+    function say(m) { $('#dHint', card).textContent = m || ''; }
+    $$('[data-preset]', card).forEach(function (b) {
+      b.onclick = function () {
+        var p = PRESETS[b.dataset.preset];
+        $('#dBase', card).value = p.base;
+        $('#dModel', card).value = p.model;
+        say('已填好 ' + p.name + '，把 Key 补上再保存');
+      };
+    });
+    $('#dSave', card).onclick = function () {
+      var c = {
+        base: ($('#dBase', card).value || '').trim().replace(/\/+$/, ''),
+        key: ($('#dKey', card).value || '').trim(),
+        model: ($('#dModel', card).value || '').trim(),
+        system: $('#dSys', card).value || '',
+        name: (S.relation.ai || 'Cove')
+      };
+      if (!c.base || !c.key || !c.model) { say('地址、Key、模型名都要填'); return; }
+      saveDirectCfg(c);
+      setMode('direct');
+      say('存好了 · 现在直连 ' + c.model);
+      toast('直连模型已保存');
+      if (mode() === 'direct' && document.body.classList.contains('direct-mode')) {
+        setPeerAndStatus(c.name, 'DIRECT · ' + c.model);
+        emptyHint('直连模式：消息只从这台设备直接发给你填的模型。<br>说点什么吧。');
+      } else {
+        setTimeout(function () { location.reload(); }, 400);
+      }
+    };
+    $('#dTest', card).onclick = function () {
+      var base = ($('#dBase', card).value || '').trim().replace(/\/+$/, '');
+      var key = ($('#dKey', card).value || '').trim();
+      var model = ($('#dModel', card).value || '').trim();
+      if (!base || !key || !model) { say('先把三项填全'); return; }
+      say('正在试…');
+      fetch(base + '/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ model: model, messages: [{ role: 'user', content: '回两个字：在。' }], max_tokens: 16 })
+      }).then(function (r) {
+        return r.text().then(function (t) {
+          if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + t.slice(0, 100));
+          var j = JSON.parse(t);
+          var x = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+          say('通了 · ' + (x || '有回应'));
+          toast('模型通了');
+        });
+      }).catch(function (e) { say('没通：' + (e.message || e)); });
+    };
+    $('#dLocal', card).onclick = function () {
+      setMode('local');
+      location.reload();
+    };
+    $('#dRelay', card).onclick = function () {
+      try { localStorage.removeItem('companion_mode'); } catch (e) {}
+      location.reload();
+    };
+  }
+
+  function wireLoginAlt() {
+    var form = document.getElementById('loginForm');
+    if (!form || document.getElementById('lgDirect')) return;
+    var alt = document.createElement('div');
+    alt.className = 'login-alt';
+    alt.innerHTML = '<button type="button" id="lgDirect">没有后端？直接用模型 API</button>' +
+      '<span class="or">或</span><button type="button" id="lgLocal">只看本地</button>';
+    form.parentNode.insertBefore(alt, form.nextSibling);
+    form.addEventListener('submit', function () { setMode('relay'); });
+    document.getElementById('lgDirect').onclick = function () { enterDirect(); };
+    document.getElementById('lgLocal').onclick = function () { enterLocal(); };
   }
 
   /* ---------------------------- 启动 ---------------------------- */
@@ -930,6 +1267,7 @@
     window.__moonSendHooked = true;
     var orig = window.apiSend;
     window.apiSend = function (text, attachments) {
+      if (mode() === 'direct') return directSend(text, attachments);
       var p = S.pills.filter(function (x) { return x.id === S.pendingPill; })[0];
       if (p && text) {
         text = '[药丸 · ' + p.n + ']\n' + p.t + '\n\n' + text;
@@ -944,12 +1282,30 @@
     buildPanel();
     bindMenu();
     wireServer();
+    wireDirectCard();
+    wireLoginAlt();
+    if (mode() === 'direct') enterDirect();
+    else if (mode() === 'local') enterLocal();
     paintPillChip();
     refreshHero();
     setInterval(refreshHero, 20000);
 
     var base = document.getElementById('baseInput');
     if (base && !base.value) base.value = savedBase();
+
+    // 默认头像换成月；用户自己换过的图不动
+    try {
+      if (!localStorage.getItem('companion_avatar')) {
+        document.documentElement.style.setProperty('--avatar-default', 'url("avatar-moon.svg")');
+      }
+      if (typeof window.applyAvatar === 'function' && !window.__moonAvatarHooked) {
+        window.__moonAvatarHooked = true;
+        var origAvatar = window.applyAvatar;
+        window.applyAvatar = function (url) {
+          return origAvatar.call(this, url || 'avatar-moon.svg');
+        };
+      }
+    } catch (e) {}
 
     // 设置里「联系 Claude」跟着 CONFIG.AI_NAME 走
     try {

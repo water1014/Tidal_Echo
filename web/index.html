@@ -1872,7 +1872,7 @@
     <input id="secretInput" type="password" inputmode="text" placeholder="连接密钥" autocomplete="off" spellcheck="false">
     <button type="submit">连接</button>
     <p class="err" id="loginErr"></p>
-    <p class="hint">部署在 GitHub Pages 时，这里必须填完整的中继地址（含 /relay）。<br>密钥只存在这台设备上。</p>
+    <p class="hint">有中继就填完整地址（含 <b>/relay</b>）和密钥。<br>没有后端也没关系，下面第二条路直接用模型 API。</p>
   </form>
 </div>
 
@@ -5957,6 +5957,11 @@ function startChat(initialMsgs, { connect = true, fromCache = false } = {}){
 }
 
 async function init(){
+  // 直连 / 纯本地模式由 moon.js 接管，不走中继
+  try{
+    const m = localStorage.getItem("companion_mode");
+    if (m && m !== "relay") return;
+  }catch(_){}
   if (!secret || !API_BASE){ showLogin(); return; }
   await loadSessions();
   loadBrain();
