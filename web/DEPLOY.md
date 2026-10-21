@@ -137,15 +137,24 @@ const CACHE = "companion-v1";   // ← 每次改前端都要 bump（v1 → v2 �
 
 GitHub Pages 只托管静态文件，**没有一个同源的 `/relay`**，所以前端必须知道你的后端完整地址。
 
-### 9.1 开启 Pages（分支发布，最省事）
+### 9.1 开启 Pages（`gh-pages` 分支）
 
-1. 把仓库推到 GitHub（默认分支 `main`）。
-2. **Settings → Pages → Build and deployment → Source** 选 **Deploy from a branch**。
-3. Branch 选 **`main`**，目录选 **`/web`**，点 Save。
-4. 等一分钟，地址是：`https://<你的用户名>.github.io/Tidal_Echo/`
+GitHub 的 Pages 只允许从仓库根或 `/docs` 发布，而这个仓库的前端在 `web/`。所以把 `web/` 镜像到一个 `gh-pages` 分支，页面根目录就是 `web/` 的内容。
 
-> `web/` 下已经有 `.nojekyll`，不会被 Jekyll 拦。
-> 如果你更想用 Actions 发布（例如以后要加构建步骤），把仓库根目录的 `.github/workflows/pages.yml` 加回来、Source 选 **GitHub Actions** 即可；注意推送带 workflow 文件的提交需要 token 有 `workflow` 权限。
+1. 打开 **Settings → Pages → Build and deployment**。
+2. Source 选 **Deploy from a branch**。
+3. Branch 选 **`gh-pages`**，目录 **`/ (root)`**，Save。
+4. 等一分钟，地址：`https://<你的用户名>.github.io/Tidal_Echo/`
+
+以后改完 `web/`，发布一行命令：
+
+```bash
+bash scripts/deploy-pages.sh
+```
+
+它会用 `web/` 重建 `gh-pages`（附 `.nojekyll`，不会被 Jekyll 拦），Pages 自动重新构建。
+
+> 想用 Actions 发布也行：自己新建 `.github/workflows/pages.yml`（参考 `actions/upload-pages-artifact`，`path: ./web`），Source 选 GitHub Actions。注意推带 workflow 文件的提交，token 需要 `workflow` 权限。
 
 ### 9.2 让 relay 允许这个来源
 
