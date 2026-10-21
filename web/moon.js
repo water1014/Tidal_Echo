@@ -872,7 +872,7 @@
     var sc = inp.closest('.settings-card');
     if (sc) {
       sc.id = 'relayCard';
-      if (mode() !== 'relay') sc.style.display = 'none';
+      syncModeUI();
     }
     inp.value = savedBase();
     function say(m) { if (hint) hint.textContent = m || ''; }
@@ -932,6 +932,11 @@
     if (st) st.textContent = status || '';
   }
 
+  function syncModeUI() {
+    var rc = document.getElementById('relayCard');
+    if (rc) rc.style.display = (mode() === 'relay') ? '' : 'none';
+  }
+
   function hideLoginShowApp() {
     var login = document.getElementById('login');
     var app = document.getElementById('app');
@@ -951,6 +956,7 @@
     setMode('direct');
     document.body.classList.add('direct-mode');
     document.body.classList.remove('local-only');
+    syncModeUI();
     hideLoginShowApp();
     var cached = [];
     try {
@@ -982,6 +988,7 @@
   function enterLocal() {
     setMode('local');
     document.body.classList.add('local-only', 'direct-mode');
+    syncModeUI();
     hideLoginShowApp();
     try {
       if (typeof readCachedMessages === 'function') readCachedMessages().then(function (c) { bootLocalChat(c); });
@@ -1284,6 +1291,7 @@
     wireServer();
     wireDirectCard();
     wireLoginAlt();
+    syncModeUI();
     if (mode() === 'direct') enterDirect();
     else if (mode() === 'local') enterLocal();
     paintPillChip();
